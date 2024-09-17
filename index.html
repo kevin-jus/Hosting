@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infected Systems Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        h1 {
+            text-align: center;
+            color: #00ffcc;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #00ffcc;
+            text-align: center;
+        }
+        th {
+            background-color: #333;
+        }
+        #chartContainer {
+            width: 80%;
+            margin: 20px auto;
+        }
+        .status {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Futuristic Infected Systems Dashboard</h1>
+
+    <!-- Real-time status updates -->
+    <div class="status">
+        <textarea id="infectionStatus" rows="5" style="width: 80%; background-color: #111; color: #00ffcc; border: 1px solid #00ffcc;" readonly></textarea>
+    </div>
+
+    <!-- Graph container -->
+    <div id="chartContainer">
+        <canvas id="infectionChart"></canvas>
+    </div>
+
+    <script>
+        // Fetching data from server and updating the chart and status
+        async function fetchData() {
+            const response = await fetch('/data');
+            const data = await response.json();
+            return data;
+        }
+
+        // Updating infection status
+        function updateStatus(data) {
+            const statusText = data.map(system => {
+                return system.hostname + " (" + system.ip + ") is infected with CPU usage " + system.cpu_usage + "%.";
+            }).join('\n');
+            document.getElementById('infectionStatus').textContent = statusText;
+        }
+
+        // Setting up the chart
+        const ctx = document.getElementById('infectionChart').getContext('2d');
+        const infectionChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [], // hostnames
+                datasets: [{
+                    label: 'CPU Usage',
+                    data: [], // cpu usage
+                    backgroundColor: [
+                        '#ff6384', '#36a2eb', '#cc65fe', '#ffce56'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Infected Systems CPU Usage'
+                    }
+                }
+            }
+        });
+
+        // Update chart and status every 5 seconds
+        setInterval(async function() {
+            const data = await fetchData();
+            updateStatus(data);
+
+            // Update chart
+            infectionChart.data.labels = data.map(system => system.hostname);
+            infectionChart.data.datasets[0].data = data.map(system => system.cpu_usage);
+            infectionChart.update();
+        }, 5000);
+    </script>
+</body>
+</html>
